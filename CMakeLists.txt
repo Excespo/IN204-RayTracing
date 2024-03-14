@@ -7,4 +7,5 @@ add_executable(ray_tracing main.cpp
         constants.h
         vector.h
         debug.h
-        ray.h)
+        ray.h
+        color.h)
