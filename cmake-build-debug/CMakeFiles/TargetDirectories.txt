@@ -1,0 +1,3 @@
+C:/Users/18490/CLionProjects/ray-tracing/cmake-build-debug/CMakeFiles/ray_tracing.dir
+C:/Users/18490/CLionProjects/ray-tracing/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/18490/CLionProjects/ray-tracing/cmake-build-debug/CMakeFiles/rebuild_cache.dir
