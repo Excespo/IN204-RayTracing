@@ -1,3 +1,0 @@
-/Users/excespo/Downloads/ray-tracing/IN204-RayTracing/cmake-build-debug/CMakeFiles/ray_tracing.dir
-/Users/excespo/Downloads/ray-tracing/IN204-RayTracing/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/excespo/Downloads/ray-tracing/IN204-RayTracing/cmake-build-debug/CMakeFiles/rebuild_cache.dir
