@@ -6,10 +6,15 @@
 #define RAY_TRACING_CAMERA_H
 
 #include <iostream>
+#include <iomanip>
 
 #include "common.h"
 #include "hittable.h"
 #include "material.h"
+
+
+
+
 
 class Camera {
 public:
@@ -29,10 +34,21 @@ public:
     void render(const Hittable& object) {
         initialize();
 
-        std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+        const int progressBarWidth = 50;
 
         for (int j = 0; j < image_height; ++j) {
-            std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
+            double progress = double(j) / image_height;
+            int pos = int(progressBarWidth * progress);
+
+            std::clog << "\r[";
+            for (int k = 0; k < progressBarWidth; ++k) {
+                if (k < pos) std::clog << "=";
+                else if (k == pos) std::clog << ">";
+                else std::clog << " ";
+            }
+            std::clog << "] " << int(progress * 100.0) << "% " << "Lines Remaining: " << (image_height - j);
+            std::clog << std::flush; // 确保立即输出
+
             for (int i = 0; i < image_width; ++i) {
                 Color pixel_color(0,0,0);
                 for (int sample = 0; sample < samples_per_pixel; ++sample) {
@@ -42,8 +58,22 @@ public:
                 write_color(std::cout, pixel_samples_scale * pixel_color);
             }
         }
+        std::clog << std::endl << "Done.\n";
+//        std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
-        std::clog << "\rDone.                 \n";
+//        for (int j = 0; j < image_height; ++j) {
+//            std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
+//            for (int i = 0; i < image_width; ++i) {
+//                Color pixel_color(0,0,0);
+//                for (int sample = 0; sample < samples_per_pixel; ++sample) {
+//                    Ray ray = get_ray(i, j);
+//                    pixel_color += ray_color(ray, max_depth, object);
+//                }
+//                write_color(std::cout, pixel_samples_scale * pixel_color);
+//            }
+//        }
+//
+//        std::clog << "\rDone.                 \n";
     }
 
 private:

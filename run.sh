@@ -3,4 +3,5 @@
 cmake -B build
 cmake --build build
 
-build/inOneWeekend > image.ppm
+echo "\nPlaying ray tracing ..."
+build/ray_tracing > image.ppm
