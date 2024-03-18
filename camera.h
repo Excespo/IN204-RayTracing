@@ -26,7 +26,7 @@ public:
     double defocus_angle = 0;  // Variation angle of rays through each pixel
     double focus_dist = 10;    // Distance from camera look_from point to plane of perfect focus
 
-    void render(const Hittable& world) {
+    void render(const Hittable& object) {
         initialize();
 
         std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
@@ -37,7 +37,7 @@ public:
                 Color pixel_color(0,0,0);
                 for (int sample = 0; sample < samples_per_pixel; ++sample) {
                     Ray ray = get_ray(i, j);
-                    pixel_color += ray_color(ray, max_depth, world);
+                    pixel_color += ray_color(ray, max_depth, object);
                 }
                 write_color(std::cout, pixel_samples_scale * pixel_color);
             }
@@ -106,7 +106,7 @@ private:
         // Construct a camera ray originating from the defocus disk and directed at a randomly
         // sampled point around the pixel location i, j
         auto offset = pixel_sample_square();
-        auto pixel_sample = pixel_00_loc +
+        auto pixel_sample = pixel_00_loc
                             + ((i + offset.get_x()) * pixel_delta_u)
                             + ((j + offset.get_y()) * pixel_delta_v);
         auto ray_origin = (defocus_angle <= 0) ? center: defocus_disk_sample();
