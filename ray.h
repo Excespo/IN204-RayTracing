@@ -4,17 +4,18 @@
 
 #ifndef RAY_TRACING_RAY_H
 #define RAY_TRACING_RAY_H
-#include "vector.h"
+
+#include "utils.h"
 
 class Ray {
 public:
-    Ray() {}
+    Ray() = default;
     Ray(const Point3d& origin, const Vector3d& direction) : orig(origin), dir(direction) {}
 
-    Point3d origin() const  { return orig; }
-    Vector3d direction() const { return dir; }
+    [[nodiscard]] Point3d origin() const  { return orig; }
+    [[nodiscard]] Vector3d direction() const { return dir; }
 
-    Point3d at(double t) const {
+    [[nodiscard]] Point3d at(double t) const {
         return orig + t*dir;
     }
 
