@@ -3,3 +3,7 @@ cmake-build-debug
 .idea
 
 .DS_Store
+
+out.txt
+image.ppm
+image_utf8.ppm

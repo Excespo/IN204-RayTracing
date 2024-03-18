@@ -19,13 +19,12 @@ public:
     int    max_depth         = 10;   // Maximum number of ray bounces into scene
 
     double vertical_fov     = 90;              // Vertical view angle (field of view)
-    Point3d look_from = Point3d(0,0,-1);  // Point camera is looking from
-    Point3d look_at   = Point3d(0,0,0);   // Point camera is looking at
+    Point3d look_from = Point3d(0,0,0);  // Point camera is looking from
+    Point3d look_at   = Point3d(0,0,-1);   // Point camera is looking at
     Vector3d vec_up      = Vector3d(0,1,0);     // Camera-relative "up" direction
 
     double defocus_angle = 0;  // Variation angle of rays through each pixel
     double focus_dist = 10;    // Distance from camera look_from point to plane of perfect focus
-
 
     void render(const Hittable& world) {
         initialize();
@@ -37,10 +36,10 @@ public:
             for (int i = 0; i < image_width; ++i) {
                 Color pixel_color(0,0,0);
                 for (int sample = 0; sample < samples_per_pixel; ++sample) {
-                    Ray r = get_ray(i, j);
-                    pixel_color += ray_color(r, max_depth, world);
+                    Ray ray = get_ray(i, j);
+                    pixel_color += ray_color(ray, max_depth, world);
                 }
-                write_color(std::cout, pixel_color * samples_per_pixel);
+                write_color(std::cout, 1/samples_per_pixel * pixel_color);
             }
         }
 
