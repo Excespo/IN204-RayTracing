@@ -69,7 +69,12 @@ private:
 
 using Point3d = Vector3d;
 
-inline std::ostream& operator<<(std::ostream &os, Vector3d &vec) {
+inline std::ostream& operator<< (std::ostream& os, const Vector3d& vec) {
+    os << "[Vector3d ]: (" << vec.get_x() << "," << vec.get_y() << "," << vec.get_z() << ")";
+    return os;
+}
+
+inline std::ostream& operator<< (std::ostream& os,  Vector3d& vec) {
     os << "[Vector3d ]: (" << vec.get_x() << "," << vec.get_y() << "," << vec.get_z() << ")";
     return os;
 }
@@ -116,7 +121,7 @@ inline double dot(const Vector3d& v1, const Vector3d& v2) {
 inline Vector3d cross(const Vector3d& v1, const Vector3d& v2) {
     return {v1.get_y() * v2.get_z() - v1.get_z() * v2.get_y(),
             v1.get_z() * v2.get_x() - v1.get_x() * v2.get_z(),
-            v1.get_x() * v2.get_y() - v1.get_z() * v2.get_x()};
+            v1.get_x() * v2.get_y() - v1.get_y() * v2.get_x()};
 }
 
 inline Vector3d unit_vector(const Vector3d& v) {
