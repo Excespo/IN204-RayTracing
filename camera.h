@@ -12,11 +12,8 @@
 #include "hittable.h"
 #include "material.h"
 
-
-
-
-
 class Camera {
+    //TODO MAKE ALL PARAMS CONFIGURABLE, INCLUDING IS_ANTIALIASING, IS_DEFOCUS_BLUR
 public:
     double aspect_ratio      = 1.0;  // Ratio of image width over height
     int    image_width       = 100;  // Rendered image width in pixel count
@@ -31,22 +28,32 @@ public:
     double defocus_angle = 0;  // Variation angle of rays through each pixel
     double focus_dist = 10;    // Distance from camera look_from point to plane of perfect focus
 
+    void print_config() const {
+        std::clog << "********** CAMERA WITH CONFIGS **********\n";
+        std::clog << "Resolution: (" << image_width << "x" << int(image_width / aspect_ratio) << "), "
+                  << "Vertical Field of View: " << vertical_fov << "\n"
+                  << "Looking from " << look_from << ", " // Little reminder here that look_from is a const ref, so former override of << didnt work
+                  << "Looking at " << look_at << ", "
+                  << "Up vector " << vec_up << "\n";
+    }
+
     void render(const Hittable& object) {
         initialize();
 
-        const int progressBarWidth = 50;
+        std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
+        const int progressBarWidth = 50;
         for (int j = 0; j < image_height; ++j) {
+            // Progress bar
             double progress = double(j) / image_height;
             int pos = int(progressBarWidth * progress);
-
             std::clog << "\r[";
             for (int k = 0; k < progressBarWidth; ++k) {
                 if (k < pos) std::clog << "=";
                 else if (k == pos) std::clog << ">";
                 else std::clog << " ";
             }
-            std::clog << "] " << int(progress * 100.0) << "% " << "Lines Remaining: " << (image_height - j);
+            std::clog << "] " << int(progress * 100.0) << "% " << "Lines Remaining: " << (image_height - j) << " ";
             std::clog << std::flush; // 确保立即输出
 
             for (int i = 0; i < image_width; ++i) {
@@ -59,21 +66,6 @@ public:
             }
         }
         std::clog << std::endl << "Done.\n";
-//        std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
-
-//        for (int j = 0; j < image_height; ++j) {
-//            std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
-//            for (int i = 0; i < image_width; ++i) {
-//                Color pixel_color(0,0,0);
-//                for (int sample = 0; sample < samples_per_pixel; ++sample) {
-//                    Ray ray = get_ray(i, j);
-//                    pixel_color += ray_color(ray, max_depth, object);
-//                }
-//                write_color(std::cout, pixel_samples_scale * pixel_color);
-//            }
-//        }
-//
-//        std::clog << "\rDone.                 \n";
     }
 
 private:
@@ -95,18 +87,22 @@ private:
 
         // Determine viewport dimensions.
         auto theta = degrees_to_radians(vertical_fov);
-        auto h = tan(theta/2);
+        auto h = std::tan(theta/2);
         auto viewport_height = 2 * h * focus_dist;
         auto viewport_width = viewport_height * (double(image_width)/image_height);
 
         // Calculate the u,v,w unit basis vectors for the camera coordinate frame.
+        // w - backward of camera, u - right hand side of camera, v - upside of camera
+        // With convention in online course https://www.bilibili.com/video/BV1X7411F744/?spm_id_from=333.337.search-card.all.click
         w = unit_vector(look_from - look_at);
         u = unit_vector(cross(vec_up, w));
         v = cross(w, u);
+        std::clog << "Coordinates of camera are:\n";
+        std::clog << "w: " << w << ",u: " << u << ",v: " << v << "\n";
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
         Vector3d viewport_u = viewport_width * u;    // Vector across viewport horizontal edge
-        Vector3d viewport_v = viewport_height * -v;  // Vector down viewport vertical edge
+        Vector3d viewport_v = viewport_height * (-v);  // Vector down viewport vertical edge
 
         // Calculate the horizontal and vertical delta vectors to the next pixel.
         pixel_delta_u = viewport_u / image_width;
@@ -123,18 +119,14 @@ private:
     }
 
     Ray get_ray(int i, int j) const {
-//        // Get a randomly-sampled camera ray for the pixel at location i,j, originating from
-//        // the camera defocus disk.
-//
-//        auto pixel_center = pixel_00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
-//        auto pixel_sample = pixel_center + pixel_sample_square();
-//
-//        auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
-//        auto ray_direction = pixel_sample - ray_origin;
-//
-//        return Ray(ray_origin, ray_direction);
         // Construct a camera ray originating from the defocus disk and directed at a randomly
         // sampled point around the pixel location i, j
+        // TODO HERE ADD CONTROL ON RANDOM ANTIALIASING AND BLURING
+        // TODO MORE REAL SIMULATION:
+        //  - SHOULD CONTAIN MORE RAYS FROM NOT ONLY THE EXACT CENTER OF CAMERA
+        //  - SHAPE OF CAMERA
+        //  - SELF-ADAPTED SAMPLING?
+        //  - MORE PARAMS TO CONTROL THE BLUR?
         auto offset = pixel_sample_square();
         auto pixel_sample = pixel_00_loc
                             + ((i + offset.get_x()) * pixel_delta_u)
@@ -147,9 +139,6 @@ private:
 
     Vector3d pixel_sample_square() const {
         // Returns a random point in the square surrounding a pixel at the origin.
-//        auto px = -0.5 + random_double();
-//        auto py = -0.5 + random_double();
-//        return (px * pixel_delta_u) + (py * pixel_delta_v);
         return Vector3d(random_double() - 0.5, random_double() - 0.5, 0);
     }
 
@@ -174,6 +163,7 @@ private:
             return Color(0,0,0);
         }
 
+        // TODO HERE WHEN MISS THE HIT WE MODEL THE COLOR TO BACKGROUND COLOR, WHICH IS FIXED, BUT SHOULD BE MORE FLEXIBLE
         Vector3d unit_direction = unit_vector(ray.direction());
         auto a = 0.5*(unit_direction.get_y() + 1.0);
         return (1.0-a)*Color(1.0, 1.0, 1.0) + a*Color(0.5, 0.7, 1.0);
