@@ -20,9 +20,9 @@ public: // TODO ALL PUBLIC?
     [[nodiscard]] double get_x() const { return e[0]; }
     [[nodiscard]] double get_y() const { return e[1]; }
     [[nodiscard]] double get_z() const { return e[2]; }
-    [[noreturn]] void set_x(double val) { e[0] = val; }
-    [[noreturn]] void set_y(double val) { e[1] = val; }
-    [[noreturn]] void set_z(double val) { e[2] = val; }
+    void set_x(double val) { e[0] = val; }
+    void set_y(double val) { e[1] = val; }
+    void set_z(double val) { e[2] = val; }
 
     Vector3d operator-() const { return {-e[0], -e[1], -e[2]}; }
     double operator[] (int i) const { return e[i]; }
