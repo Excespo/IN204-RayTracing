@@ -1,5 +1,5 @@
 //
-// Created by LUO Yijie on 2024/3/14.
+// Created by LUO Yijie on 2024/2/14.
 //
 
 #ifndef RAY_TRACING_COLOR_H

@@ -1,5 +1,5 @@
 //
-// Created by 18490 on 2024/3/13.
+// Created by LUO Yijie on 2024/2/13.
 //
 
 #ifndef RAY_TRACING_VECTOR_H

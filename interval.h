@@ -1,5 +1,5 @@
 //
-// Created by 18490 on 2024/3/18.
+// Created by LUO Yijie on 2024/2/18.
 //
 
 #ifndef RAY_TRACING_INTERVAL_H
