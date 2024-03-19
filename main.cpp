@@ -78,9 +78,19 @@ int main(int argc, char** argv) {
         
         std::string extension = filePath.substr(filePath.size() - 4);
         if (extension == ".ppm") {
+            // Compare time
             cam.renderToPPM(world, filePath);
+            // Parallel
+            filePath = filePath.substr(0, filePath.size() - 4) + "_parallel.ppm"; 
+            int n_threads = 4;
+            cam.renderToPPM_parallel(world, filePath, n_threads);
         } else if (extension == ".png") {
             cam.renderToPNG(world, filePath);
+
+            // Parallel
+            filePath = filePath.substr(0, filePath.size() - 4) + "_parallel.png";
+            int n_threads = 4;
+            cam.renderToPNG_parallel(world, filePath, n_threads);
         } else {
             std::cerr << "Unsupported file format. Please use .ppm or .png" << std::endl;
             return 1;
