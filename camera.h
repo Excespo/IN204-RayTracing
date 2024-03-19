@@ -7,10 +7,12 @@
 
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 
 #include "common.h"
 #include "hittable.h"
 #include "material.h"
+#include "svpng.inc"
 
 class Camera {
     //TODO MAKE ALL PARAMS CONFIGURABLE, INCLUDING IS_ANTIALIASING, IS_DEFOCUS_BLUR
@@ -66,6 +68,84 @@ public:
             }
         }
         std::clog << std::endl << "Done.\n";
+    }
+
+    void renderToPPM(const Hittable& object, const std::string& filePath) {
+        std::ofstream file;
+        file.open(filePath);
+
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file: " << filePath << std::endl;
+            return;
+        }
+
+        initialize();
+
+        file << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+
+        const int progressBarWidth = 50;
+        for (int j = 0; j < image_height; ++j) {
+            // Progress bar, still output to console
+            double progress = double(j) / image_height;
+            int pos = int(progressBarWidth * progress);
+            std::clog << "\r[";
+            for (int k = 0; k < progressBarWidth; ++k) {
+                if (k < pos) std::clog << "=";
+                else if (k == pos) std::clog << ">";
+                else std::clog << " ";
+            }
+            std::clog << "] " << int(progress * 100.0) << "% " << "Lines Remaining: " << (image_height - j) << " ";
+            std::clog << std::flush; // Ensure immediate output
+
+            for (int i = 0; i < image_width; ++i) {
+                Color pixel_color(0,0,0);
+                for (int sample = 0; sample < samples_per_pixel; ++sample) {
+                    Ray ray = get_ray(i, j);
+                    pixel_color += ray_color(ray, max_depth, object);
+                }
+                write_color(file, pixel_samples_scale * pixel_color); // Now writes to file
+            }
+        }
+        std::clog << std::endl << "Done.\n";
+
+        file.close();
+    }
+
+    void renderToPNG(const Hittable& object, const std::string& filePath) {
+        initialize();
+
+        std::vector<unsigned char> pixels(image_width * image_height * 3);
+        const int progressBarWidth = 50;
+
+        for (int j = 0; j < image_height; ++j) {
+            double progress = double(j) / image_height;
+            int pos = int(progressBarWidth * progress);
+            std::clog << "\r[";
+            for (int k = 0; k < progressBarWidth; ++k) {
+                if (k < pos) std::clog << "=";
+                else if (k == pos) std::clog << ">";
+                else std::clog << " ";
+            }
+            std::clog << "] " << int(progress * 100.0) << "% " << "Lines Remaining: " << (image_height - j) << " ";
+            std::clog << std::flush; // Ensure immediate output
+            
+            for (int i = 0; i < image_width; ++i) {
+                Color pixel_color(0,0,0);
+                for (int sample = 0; sample < samples_per_pixel; ++sample) {
+                    Ray ray = get_ray(i, j);
+                    pixel_color += ray_color(ray, max_depth, object);
+                }
+                write_color_px(pixels, pixel_samples_scale * pixel_color, (j * image_width + i) * 3);
+            }
+        }
+
+        FILE* fp = fopen(filePath.c_str(), "wb");
+        if (!fp) {
+            std::cerr << "Failed to open file " << filePath << " for writing." << std::endl;
+            return;
+        }
+        svpng(fp, image_width, image_height, pixels.data(), 0);
+        fclose(fp);
     }
 
 private:
