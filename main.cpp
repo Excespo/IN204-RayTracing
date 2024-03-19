@@ -6,7 +6,7 @@
 #include "geometry.h"
 
 
-int main() {
+int main(int argc, char** argv) {
     HittableList world;
 
     auto ground_material = std::make_shared<Lambertian>(Color(0.5, 0.5, 0.5));
@@ -66,5 +66,34 @@ int main() {
 
     cam.print_config();
 
-    cam.render(world);
+    if (argc == 1) {
+        cam.render(world);
+    } else if (argc > 1) {
+        // 提供了文件名，根据文件扩展名决定调用的函数
+        std::string filePath = argv[1];
+        if (filePath.size() < 4){
+            std::cerr << "Invalid file name. Please provide a valid .ppm or .png file name." << std::endl;
+            return 1;
+        }
+        
+        std::string extension = filePath.substr(filePath.size() - 4);
+        if (extension == ".ppm") {
+            // Compare time
+            cam.renderToPPM(world, filePath);
+            // Parallel
+            filePath = filePath.substr(0, filePath.size() - 4) + "_parallel.ppm"; 
+            int n_threads = 4;
+            cam.renderToPPM_parallel(world, filePath, n_threads);
+        } else if (extension == ".png") {
+            cam.renderToPNG(world, filePath);
+
+            // Parallel
+            filePath = filePath.substr(0, filePath.size() - 4) + "_parallel.png";
+            int n_threads = 4;
+            cam.renderToPNG_parallel(world, filePath, n_threads);
+        } else {
+            std::cerr << "Unsupported file format. Please use .ppm or .png" << std::endl;
+            return 1;
+        }
+    }
 }

@@ -28,4 +28,18 @@ void write_color(std::ostream& os, const Color& pixel_color) {
     os << r << " " << g << " " << b << "\n";
 }
 
+void write_color_px(std::vector<unsigned char>& pixels, const Color& pixel_color, int index) {
+    double r = linear_to_gamma(pixel_color.get_x());
+    double g = linear_to_gamma(pixel_color.get_y());
+    double b = linear_to_gamma(pixel_color.get_z());
+    static const Interval intensity_bound(0.000, 0.999);
+    r = (int)(256 * intensity_bound.clamp(r));
+    g = (int)(256 * intensity_bound.clamp(g));
+    b = (int)(256 * intensity_bound.clamp(b));
+
+    pixels[index] = r;
+    pixels[index + 1] = g;
+    pixels[index + 2] = b;
+}
+
 #endif //RAY_TRACING_COLOR_H

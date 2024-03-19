@@ -7,10 +7,15 @@
 
 #include <iostream>
 #include <iomanip>
+#include <fstream>
+#include <thread>
+#include <chrono>
+#include <mutex>
 
 #include "common.h"
 #include "hittable.h"
 #include "material.h"
+#include "svpng.inc"
 
 class Camera {
     //TODO MAKE ALL PARAMS CONFIGURABLE, INCLUDING IS_ANTIALIASING, IS_DEFOCUS_BLUR
@@ -66,6 +71,203 @@ public:
             }
         }
         std::clog << std::endl << "Done.\n";
+    }
+
+    void renderToPPM(const Hittable& object, const std::string& filePath) {
+        std::ofstream file;
+        file.open(filePath);
+
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file: " << filePath << std::endl;
+            return;
+        }
+
+        initialize();
+
+        file << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+        auto start = std::chrono::high_resolution_clock::now();
+
+        const int progressBarWidth = 50;
+        for (int j = 0; j < image_height; ++j) {
+            // Progress bar, still output to console
+            double progress = double(j) / image_height;
+            int pos = int(progressBarWidth * progress);
+            std::clog << "\r[";
+            for (int k = 0; k < progressBarWidth; ++k) {
+                if (k < pos) std::clog << "=";
+                else if (k == pos) std::clog << ">";
+                else std::clog << " ";
+            }
+            std::clog << "] " << int(progress * 100.0) << "% " << "Lines Remaining: " << (image_height - j) << " ";
+            std::clog << std::flush; // Ensure immediate output
+
+            for (int i = 0; i < image_width; ++i) {
+                Color pixel_color(0,0,0);
+                for (int sample = 0; sample < samples_per_pixel; ++sample) {
+                    Ray ray = get_ray(i, j);
+                    pixel_color += ray_color(ray, max_depth, object);
+                }
+                write_color(file, pixel_samples_scale * pixel_color); // Now writes to file
+            }
+        }
+        file.close();
+
+        std::clog << std::endl << "Done.\n";
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::clog << "Time elapsed: " << elapsed.count() << "s" << std::endl;
+    }
+
+    void renderToPNG(const Hittable& object, const std::string& filePath) {
+        initialize();
+
+        std::vector<unsigned char> pixels(image_width * image_height * 3);
+        const int progressBarWidth = 50;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        for (int j = 0; j < image_height; ++j) {
+            double progress = double(j) / image_height;
+            int pos = int(progressBarWidth * progress);
+            std::clog << "\r[";
+            for (int k = 0; k < progressBarWidth; ++k) {
+                if (k < pos) std::clog << "=";
+                else if (k == pos) std::clog << ">";
+                else std::clog << " ";
+            }
+            std::clog << "] " << int(progress * 100.0) << "% " << "Lines Remaining: " << (image_height - j) << " ";
+            std::clog << std::flush; // Ensure immediate output
+            
+            for (int i = 0; i < image_width; ++i) {
+                Color pixel_color(0,0,0);
+                for (int sample = 0; sample < samples_per_pixel; ++sample) {
+                    Ray ray = get_ray(i, j);
+                    pixel_color += ray_color(ray, max_depth, object);
+                }
+                write_color_px(pixels, pixel_samples_scale * pixel_color, (j * image_width + i) * 3);
+            }
+        }
+
+        FILE* fp = fopen(filePath.c_str(), "wb");
+        if (!fp) {
+            std::cerr << "Failed to open file " << filePath << " for writing." << std::endl;
+            return;
+        }
+        svpng(fp, image_width, image_height, pixels.data(), 0);
+        fclose(fp);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::clog << std::endl << "Done.\n";
+        std::clog << "Time elapsed: " << elapsed.count() << "s" << std::endl;
+    }
+
+    void renderToPPM_parallel(const Hittable& object, const std::string& filePath, int numThreads) {
+        std::ofstream file(filePath);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file: " << filePath << std::endl;
+            return;
+        }
+
+        initialize();
+
+        file << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+        auto start = std::chrono::high_resolution_clock::now();
+
+        std::vector<std::thread> threads;
+        std::vector<std::vector<Color>> linesBuffer(image_height, std::vector<Color>(image_width));
+
+        int linesPerThread = image_height / numThreads;
+        for (int i = 0; i < numThreads; ++i) {
+            int startLine = i * linesPerThread;
+            int endLine = (i + 1) * linesPerThread;
+            if (i == numThreads - 1) {
+                endLine = image_height; // 确保最后一个线程能够处理所有剩余的行
+            }
+            // 注意这里的使用方式
+            threads.push_back(std::thread(&Camera::renderSection, this, std::ref(object), startLine, endLine, std::ref(linesBuffer)));
+        }
+
+        for (auto& t : threads) {
+            t.join(); // 等待所有线程完成
+        }
+
+        // 写入渲染结果
+        for (const auto& line : linesBuffer) {
+            for (const auto& color : line) {
+                write_color(file, color);
+            }
+        }
+
+        file.close();
+        std::clog << "Done.\n";
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::clog << "Time elapsed: " << elapsed.count() << "s" << std::endl;
+        
+    }
+
+    void renderToPNG_parallel(const Hittable& object, const std::string& filePath, int numThreads) {
+        initialize();
+
+        std::vector<unsigned char> pixels(image_width * image_height * 3);
+        std::vector<std::thread> threads;
+        std::mutex progressMutex;
+        int completedLines = 0;
+        const int progressBarWidth = 50;
+
+        auto renderSection = [&](int startY, int endY) {
+            for (int j = startY; j < endY; ++j) {
+                for (int i = 0; i < image_width; ++i) {
+                    Color pixel_color(0,0,0);
+                    for (int sample = 0; sample < samples_per_pixel; ++sample) {
+                        Ray ray = get_ray(i, j);
+                        pixel_color += ray_color(ray, max_depth, object);
+                    }
+                    int index = (j * image_width + i) * 3;
+                    auto scaledColor = pixel_samples_scale * pixel_color;
+                    write_color_px(pixels, scaledColor, index);
+                }
+                {
+                    std::lock_guard<std::mutex> lock(progressMutex);
+                    completedLines++;
+                    double progress = double(completedLines) / image_height;
+                    int pos = int(progressBarWidth * progress);
+                    std::clog << "\r[";
+                    for (int k = 0; k < progressBarWidth; ++k) {
+                        if (k < pos) std::clog << "=";
+                        else if (k == pos) std::clog << ">";
+                        else std::clog << " ";
+                    }
+                    std::clog << "] " << int(progress * 100.0) << "% " << "Lines Remaining: " << (image_height - completedLines) << " ";
+                    std::clog << std::flush; // Ensure immediate output
+                }
+            }
+        };
+        auto start = std::chrono::high_resolution_clock::now();
+        int linesPerThread = image_height / numThreads;
+        for (int i = 0; i < numThreads; ++i) {
+            int startLine = i * linesPerThread;
+            int endLine = (i + 1) * linesPerThread;
+            if (i == numThreads - 1) {
+                endLine = image_height; // Ensure the last thread handles all remaining lines
+            }
+            threads.emplace_back(renderSection, startLine, endLine);
+        }
+
+        for (auto& thread : threads) {
+            thread.join();
+        }
+
+        FILE* fp = fopen(filePath.c_str(), "wb");
+        if (!fp) {
+            std::cerr << "Failed to open file " << filePath << " for writing." << std::endl;
+            return;
+        }
+        svpng(fp, image_width, image_height, pixels.data(), 0);
+        fclose(fp);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::clog << std::endl << "Done.\n";
+        std::clog << "Time elapsed: " << elapsed.count() << "s" << std::endl;
     }
 
 private:
@@ -167,6 +369,20 @@ private:
         Vector3d unit_direction = unit_vector(ray.direction());
         auto a = 0.5*(unit_direction.get_y() + 1.0);
         return (1.0-a)*Color(1.0, 1.0, 1.0) + a*Color(0.5, 0.7, 1.0);
+    }
+
+    // 将渲染单个区域（一组行）的任务分配给线程
+    void renderSection(const Hittable& object, int startY, int endY, std::vector<std::vector<Color>>& linesBuffer) {
+        for (int y = startY; y < endY; ++y) {
+            for (int x = 0; x < image_width; ++x) {
+                Color pixel_color(0,0,0);
+                for (int sample = 0; sample < samples_per_pixel; ++sample) {
+                    Ray ray = get_ray(x, y);
+                    pixel_color += ray_color(ray, max_depth, object);
+                }
+                linesBuffer[y][x] = pixel_samples_scale * pixel_color;
+            }
+        }
     }
 };
 
