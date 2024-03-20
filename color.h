@@ -16,7 +16,7 @@ double linear_to_gamma(double linear) {
     return 0;
 }
 
-void write_color(std::ostream& os, const Color& pixel_color) {
+void write_color_PPM(std::ostream& os, const Color& pixel_color) {
     double r = linear_to_gamma(pixel_color.get_x());
     double g = linear_to_gamma(pixel_color.get_y());
     double b = linear_to_gamma(pixel_color.get_z());
@@ -28,7 +28,7 @@ void write_color(std::ostream& os, const Color& pixel_color) {
     os << r << " " << g << " " << b << "\n";
 }
 
-void write_color_px(std::vector<unsigned char>& pixels, const Color& pixel_color, int index) {
+void write_color_PNG(std::vector<unsigned char>& pixels, const Color& pixel_color, int index) {
     double r = linear_to_gamma(pixel_color.get_x());
     double g = linear_to_gamma(pixel_color.get_y());
     double b = linear_to_gamma(pixel_color.get_z());
