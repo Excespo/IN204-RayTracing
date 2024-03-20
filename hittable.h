@@ -20,6 +20,7 @@ public:
     bool front_face;
 
     void set_face_normal(const Ray& ray, const Vector3d& outward_normal) {
+        // Design here is normal vector always points against the ray's direction
         // Should set outward_normal vector to length 1
         front_face = dot(ray.direction(), outward_normal) < 0;
         normal = front_face ? outward_normal : -outward_normal;
