@@ -9,6 +9,7 @@
 #include <memory>
 #include <limits>
 #include <random>
+#include <iostream>
 #include <chrono>
 
 using std::fmin;
@@ -58,8 +59,20 @@ public:
         std::clog << std::flush;
     }
 
-    void done() {
-        std::clog << std::endl << "Done.\n";
+    void done(const std::string& log) {
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end_time- start_time).count();
+
+        std::clog << "touching " << log << "\n";
+        std::ofstream file(log, std::ios::out | std::ios::app);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file: " << log << std::endl;
+            exit(0);
+        }
+        file << "Elapsed time: " << duration << " " << std::endl;
+        file.close();
+
+        std::clog << std::endl << "Done. " << "Elapsed time: " << duration << "s " << std::endl;
     }
 
 private:

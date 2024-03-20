@@ -31,6 +31,9 @@ Change the variables in script for different work mode
  - -p : parallel mode on
  - -a : anti-alias mode on
 
+# Log
+`result/log.txt` : you can find the corresponding parameters and elapsed time.
+
 # Theoretical explanation
 
 `camera.h` : 
