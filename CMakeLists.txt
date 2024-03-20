@@ -21,9 +21,7 @@ add_executable(ray_tracing main.cpp
         material.h
         geometry.h
         common.h
-)
-
-add_executable(test_vector
-        vector.h
-        test/test_vector.cpp
+        clipp.h
+        args.h
+        render.h
 )
