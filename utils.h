@@ -9,6 +9,7 @@
 #include <memory>
 #include <limits>
 #include <random>
+#include <chrono>
 
 using std::fmin;
 using std::fmax;
@@ -52,7 +53,8 @@ public:
             else std::clog << " ";
         }
         std::clog << "] " << int(progress * 100.0) << "% ";
-        std::clog << "Time Remaining: " << remaining_time / 60 << "m " << remaining_time % 60 << "s ";
+        std::clog << "Time Remaining: " << remaining_time / 60 << "m " << remaining_time % 60 << "s | ";
+        std::clog << "Iter Remaining: " << (total_steps - current_step) << " ";
         std::clog << std::flush;
     }
 
@@ -62,7 +64,7 @@ public:
 
 private:
     int total_steps;
-    const int progressBarWidth = 50;
+    const int progressBarWidth = 40;
     std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
 };
 
