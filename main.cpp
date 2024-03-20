@@ -64,16 +64,18 @@ int main(int argc, char** argv) {
             option("-p", "--parallel").set(args.parallel).doc("run ray-tracing program in parallelization"),
             option("-a", "--antialias").set(args.anti_alias).doc("enable anti-aliasing with trivial sampling"),
             option("-r", "-aspect_ratio").doc("aspect ratio of image")
-                & value("ASPECT_RATIO", args.samples_per_pixel),
+                & value("ASPECT_RATIO", args.aspect_ratio),
             option("-s", "-samples_per_pixel").doc("number of samples per pixel")
                 & value("N_SAMPLES", args.samples_per_pixel),
             option("-w", "-width").doc("width of image")
                 & value("IMAGE_WIDTH", args.image_width),
             option("-d", "-depth").doc("maxi depth of recursion of rays")
-                & value("MAX_DEPTH", args.max_depth)
+                & value("MAX_DEPTH", args.max_depth),
+            option("-n", "num_threads").doc("number of threads to activate")
+                & value("NUM_THREADS", args.num_threads)
             );
     if(!parse(argc, argv, cli)) std::clog << make_man_page(cli, argv[0]);
-    args.print();
+    args.print(std::clog);
 
     std::ofstream file(args.message_to_file);
     if (!file.is_open()) {
@@ -81,6 +83,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     file << args.output_file << ":\n\t" << args.message << std::endl;
+    args.print(file);
     file.close();
 
     // Construct all world
@@ -102,7 +105,8 @@ int main(int argc, char** argv) {
     cam.rp.use_anti_alias = args.anti_alias;
     cam.rp.use_parallel   = args.parallel;
     cam.rp.output         = args.output_file;
-//    cam.rp.num_threads    = args.n_threads;
+    cam.rp.num_threads    = args.num_threads;
+    cam.rp.log            = args.message_to_file;
 
     // Trace!
     cam.render(world);
