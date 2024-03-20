@@ -16,6 +16,7 @@ class Args {
 public:
     string output_file;
     bool parallel = false;
+    int num_threads = 1;
     bool anti_alias = true;
     string message;
     string message_to_file = "result/log.txt";
@@ -31,16 +32,15 @@ public:
     double defocus_angle = 0;
     double focus_dist    = 10;
 
-    void print() const {
-        std::clog << "************ ARGS OF RAY-TRACER ************\n";
-        std::clog << "RESOLUTION : (" << image_width << " x " << int(image_width/aspect_ratio) << "), "
+    void print(std::ostream& os) const {
+        os << "************ ARGS OF RAY-TRACER ************\n";
+        os << "RESOLUTION : (" << image_width << " x " << int(image_width/aspect_ratio) << "), "
                   << "SAMPLES_PER_PIXEL :"  << samples_per_pixel << ", "
                   << "MAX_DEPTH : " << max_depth << "\n";
-        std::clog << "OUTPUT TO : " << output_file << ", "
-                  << "PARALLEL : " << (parallel ? "ON" : "OFF") << ", "
-                  << "ANTI-ALIAS : " << (anti_alias ? "ON" : "OFF") << ", "
-                  << "MESSAGE [" << message << "] to be written in [" << message_to_file << "]\n";
-        std::clog << "********************************************\n";
+        os << "OUTPUT TO : " << output_file << ", "
+                  << num_threads << " threads-PARALLEL : " << (parallel ? "ON" : "OFF") << ", "
+                  << "ANTI-ALIAS : " << (anti_alias ? "ON" : "OFF") << ", ";
+        os << "\n********************************************\n";
     }
 };
 
