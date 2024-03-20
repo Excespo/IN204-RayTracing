@@ -34,6 +34,11 @@ Change the variables in script for different work mode
 # Log
 `result/log.txt` : you can find the corresponding parameters and elapsed time.
 
-# Theoretical explanation
-
-`camera.h` : 
+# Caracteristics to be implemented
+ - Texture (mapping from 2d to 3d)
+ - Geometry like triangle
+ - Light source
+ - Motion of objects
+ - Fix the noisy points
+ - CUDA support
+ - Optimisation on design(Matrix operation, Search for object hits)
