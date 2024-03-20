@@ -14,12 +14,13 @@ using namespace clipp;
 
 class Args {
 public:
-    string output_file;
-    bool parallel = false;
-    int num_threads = 1;
+    string output_file = "image.png";
+    bool parallel = true;
+    int num_threads = 8;
     bool anti_alias = true;
     string message;
-    string message_to_file = "result/log.txt";
+    string message_to_file = "result/log.txt"; // with script
+//    string message_to_file = "../result/log.txt"; // with CLion
 
     double aspect_ratio = 16.0/9.0;
     int image_width = 400;
