@@ -1,15 +1,16 @@
 #include <iostream>
+#include <fstream>>
 
 #include "common.h"
 #include "camera.h"
 #include "material.h"
 #include "geometry.h"
 
-
-int main(int argc, char** argv) {
+// Only function to be modified by users
+HittableList construct() {
     HittableList world;
 
-    auto ground_material = std::make_shared<Lambertian>(Color(0.5, 0.5, 0.5));
+    auto ground_material = std::make_shared<Lambertian>(Color(0.2, 0.2, 0.2));
     world.add(std::make_shared<Sphere>(Point3d(0,-1000,0), 1000, ground_material));
 
     for (int a = -11; a < 11; a++) {
@@ -49,27 +50,60 @@ int main(int argc, char** argv) {
     auto material3 = std::make_shared<Metal>(Color(0.7, 0.6, 0.5), 0.0);
     world.add(std::make_shared<Sphere>(Point3d(4, 1, 0), 1.0, material3));
 
+    return world;
+}
+
+int main(int argc, char** argv) {
+
+    // Read and write ray-tracing arguments
+    Args args;
+    auto cli = (
+            value("output_file", args.output_file).doc("output image to OUTPUT_FILE"),
+            option("-m", "-message").doc("MESSAGE written to result/log.txt")
+                & value("MESSAGE", args.message),
+            option("-p", "--parallel").set(args.parallel).doc("run ray-tracing program in parallelization"),
+            option("-a", "--antialias").set(args.anti_alias).doc("enable anti-aliasing with trivial sampling"),
+            option("-r", "-aspect_ratio").doc("aspect ratio of image")
+                & value("ASPECT_RATIO", args.samples_per_pixel),
+            option("-s", "-samples_per_pixel").doc("number of samples per pixel")
+                & value("N_SAMPLES", args.samples_per_pixel),
+            option("-w", "-width").doc("width of image")
+                & value("IMAGE_WIDTH", args.image_width),
+            option("-d", "-depth").doc("maxi depth of recursion of rays")
+                & value("MAX_DEPTH", args.max_depth)
+            );
+    if(!parse(argc, argv, cli)) std::clog << make_man_page(cli, argv[0]);
+    args.print();
+
+    std::ofstream file(args.message_to_file);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << args.message_to_file << std::endl;
+        return 1;
+    }
+    file << args.output_file << ":\n\t" << args.message << std::endl;
+    file.close();
+
+    // Construct all world
+    HittableList world = construct();
+
+    // Initialize camera
     Camera cam;
+    cam.do_antialias      = args.anti_alias;
+    cam.aspect_ratio      = args.aspect_ratio;
+    cam.image_width       = args.image_width;
+    cam.samples_per_pixel = args.samples_per_pixel;
+    cam.max_depth         = args.max_depth;
+    cam.vertical_fov      = 20;
+    cam.look_from         = Point3d(13,2,3);
+    cam.look_at           = Point3d(0,0,0);
+    cam.vec_up            = Vector3d(0,1,0);
+    cam.defocus_angle     = 0.6;
+    cam.focus_dist        = 10.0;
 
-    cam.aspect_ratio      = 16.0 / 9.0;
-    cam.image_width       = 400;
-    cam.samples_per_pixel = 10;
-    cam.max_depth         = 20;
-
-    cam.vertical_fov     = 20;
-    cam.look_from = Point3d(13,2,3);
-    cam.look_at   = Point3d(0,0,0);
-    cam.vec_up      = Vector3d(0,1,0);
-
-    cam.defocus_angle = 0.6;
-    cam.focus_dist    = 10.0;
-
-    cam.print_config();
-
+    // Trace!
     if (argc == 1) {
-        cam.render(world);
+        cam.renderToCOUT(world);
     } else if (argc > 1) {
-        // 提供了文件名，根据文件扩展名决定调用的函数
         std::string filePath = argv[1];
         if (filePath.size() < 4){
             std::cerr << "Invalid file name. Please provide a valid .ppm or .png file name." << std::endl;
@@ -79,13 +113,13 @@ int main(int argc, char** argv) {
         std::string extension = filePath.substr(filePath.size() - 4);
         if (extension == ".ppm") {
             // Compare time
-            cam.renderToPPM(world, filePath);
+//            cam.renderToPPM(world, filePath);
             // Parallel
             filePath = filePath.substr(0, filePath.size() - 4) + "_parallel.ppm"; 
             int n_threads = 4;
             cam.renderToPPM_parallel(world, filePath, n_threads);
         } else if (extension == ".png") {
-            cam.renderToPNG(world, filePath);
+//            cam.renderToPNG(world, filePath);
 
             // Parallel
             filePath = filePath.substr(0, filePath.size() - 4) + "_parallel.png";
