@@ -1,5 +1,5 @@
 #include <iostream>
-#include <fstream>>
+#include <fstream>
 
 #include "common.h"
 #include "camera.h"
@@ -88,7 +88,6 @@ int main(int argc, char** argv) {
 
     // Initialize camera
     Camera cam;
-    cam.do_antialias      = args.anti_alias;
     cam.aspect_ratio      = args.aspect_ratio;
     cam.image_width       = args.image_width;
     cam.samples_per_pixel = args.samples_per_pixel;
@@ -100,34 +99,11 @@ int main(int argc, char** argv) {
     cam.defocus_angle     = 0.6;
     cam.focus_dist        = 10.0;
 
-    // Trace!
-    if (argc == 1) {
-        cam.renderToCOUT(world);
-    } else if (argc > 1) {
-        std::string filePath = argv[1];
-        if (filePath.size() < 4){
-            std::cerr << "Invalid file name. Please provide a valid .ppm or .png file name." << std::endl;
-            return 1;
-        }
-        
-        std::string extension = filePath.substr(filePath.size() - 4);
-        if (extension == ".ppm") {
-            // Compare time
-//            cam.renderToPPM(world, filePath);
-            // Parallel
-            filePath = filePath.substr(0, filePath.size() - 4) + "_parallel.ppm"; 
-            int n_threads = 4;
-            cam.renderToPPM_parallel(world, filePath, n_threads);
-        } else if (extension == ".png") {
-//            cam.renderToPNG(world, filePath);
+    cam.rp.use_anti_alias = args.anti_alias;
+    cam.rp.use_parallel   = args.parallel;
+    cam.rp.output         = args.output_file;
+//    cam.rp.num_threads    = args.n_threads;
 
-            // Parallel
-            filePath = filePath.substr(0, filePath.size() - 4) + "_parallel.png";
-            int n_threads = 4;
-            cam.renderToPNG_parallel(world, filePath, n_threads);
-        } else {
-            std::cerr << "Unsupported file format. Please use .ppm or .png" << std::endl;
-            return 1;
-        }
-    }
+    // Trace!
+    cam.render(world);
 }
