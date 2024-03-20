@@ -14,12 +14,21 @@ private:
 public:
     Interval() : min(+inf), max(-inf) {}
     Interval(double min, double max) : min(min), max(max) {}
+    Interval(const Interval& in1, const Interval& in2)
+        : min(fmin(in1.get_min(), in2.get_min())), max(fmax(in1.get_max(), in2.get_max())) {}
 
     [[nodiscard]] double get_min() const { return min; }
     [[nodiscard]] double get_max() const { return max; }
+    void set_min(double m) { min = m; }
+    void set_max(double m) { max = m; }
 
     [[nodiscard]] double size() const {
         return max - min;
+    }
+
+    Interval expand(double delta) const {
+        double side = delta / 2;
+        return Interval(min - side, max + side);
     }
 
     [[nodiscard]] bool contains(double x) const {
