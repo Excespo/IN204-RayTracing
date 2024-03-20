@@ -20,57 +20,62 @@
 class Camera {
     //TODO MAKE ALL PARAMS CONFIGURABLE, INCLUDING IS_ANTIALIASING, IS_DEFOCUS_BLUR
 public:
-    double aspect_ratio      = 1.0;  // Ratio of image width over height
-    int    image_width       = 100;  // Rendered image width in pixel count
-    int    samples_per_pixel = 10;   // Count of random samples for each pixel
-    int    max_depth         = 10;   // Maximum number of ray bounces into scene
+    double aspect_ratio = 1.0;  // Ratio of image width over height
+    int image_width = 100;  // Rendered image width in pixel count
+    int samples_per_pixel = 10;   // Count of random samples for each pixel
+    int max_depth = 10;   // Maximum number of ray bounces into scene
 
-    double vertical_fov     = 90;              // Vertical view angle (field of view)
+    double vertical_fov = 90;              // Vertical view angle (field of view)
     Point3d look_from = Point3d(0,0,0);  // Point camera is looking from
-    Point3d look_at   = Point3d(0,0,-1);   // Point camera is looking at
-    Vector3d vec_up      = Vector3d(0,1,0);     // Camera-relative "up" direction
+    Point3d look_at = Point3d(0,0,-1);   // Point camera is looking at
+    Vector3d vec_up = Vector3d(0,1,0);     // Camera-relative "up" direction
 
     double defocus_angle = 0;  // Variation angle of rays through each pixel
     double focus_dist = 10;    // Distance from camera look_from point to plane of perfect focus
 
-    void print_config() const {
-        std::clog << "********** CAMERA WITH CONFIGS **********\n";
-        std::clog << "Resolution: (" << image_width << "x" << int(image_width / aspect_ratio) << "), "
-                  << "Vertical Field of View: " << vertical_fov << "\n"
-                  << "Looking from " << look_from << ", " // Little reminder here that look_from is a const ref, so former override of << didnt work
-                  << "Looking at " << look_at << ", "
-                  << "Up vector " << vec_up << "\n";
-    }
+    bool do_antialias = true;
+    bool do_parallel = true;
 
-    void render(const Hittable& object) {
+//    void print_config() const {
+//        std::clog << "********** CAMERA WITH CONFIGS **********\n";
+//        std::clog << "Resolution: (" << image_width << "x" << int(image_width / aspect_ratio) << "), "
+//                  << "Vertical Field of View: " << vertical_fov << "\n"
+//                  << "Looking from " << look_from << ", " // Little reminder here that look_from is a const ref, so former override of << didnt work
+//                  << "Looking at " << look_at << ", "
+//                  << "Up vector " << vec_up << "\n";
+//    }
+
+    void renderToCOUT(const Hittable& world) {
         initialize();
+        ProgressBar pb(image_height);
 
         std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
-        const int progressBarWidth = 50;
         for (int j = 0; j < image_height; ++j) {
-            // Progress bar
-            double progress = double(j) / image_height;
-            int pos = int(progressBarWidth * progress);
-            std::clog << "\r[";
-            for (int k = 0; k < progressBarWidth; ++k) {
-                if (k < pos) std::clog << "=";
-                else if (k == pos) std::clog << ">";
-                else std::clog << " ";
-            }
-            std::clog << "] " << int(progress * 100.0) << "% " << "Lines Remaining: " << (image_height - j) << " ";
-            std::clog << std::flush; // 确保立即输出
+//            // Progress bar
+//            double progress = double(j) / image_height;
+//            int pos = int(progressBarWidth * progress);
+//            std::clog << "\r[";
+//            for (int k = 0; k < progressBarWidth; ++k) {
+//                if (k < pos) std::clog << "=";
+//                else if (k == pos) std::clog << ">";
+//                else std::clog << " ";
+//            }
+//            std::clog << "] " << int(progress * 100.0) << "% " << "Lines Remaining: " << (image_height - j) << " ";
+//            std::clog << std::flush; // 确保立即输出
+            pb.update(j);
 
             for (int i = 0; i < image_width; ++i) {
                 Color pixel_color(0,0,0);
                 for (int sample = 0; sample < samples_per_pixel; ++sample) {
-                    Ray ray = get_ray(i, j);
-                    pixel_color += ray_color(ray, max_depth, object);
+                    Ray ray = get_ray(i, j, do_antialias);
+                    pixel_color += ray_color(ray, max_depth, world);
                 }
-                write_color(std::cout, pixel_samples_scale * pixel_color);
+                write_color(std::cout, pixel_samples_scale * pixel_color); // take average of multi-sampling
             }
         }
-        std::clog << std::endl << "Done.\n";
+//        std::clog << std::endl << "Done.\n";
+            pb.done();
     }
 
     void renderToPPM(const Hittable& object, const std::string& filePath) {
@@ -104,7 +109,7 @@ public:
             for (int i = 0; i < image_width; ++i) {
                 Color pixel_color(0,0,0);
                 for (int sample = 0; sample < samples_per_pixel; ++sample) {
-                    Ray ray = get_ray(i, j);
+                    Ray ray = get_ray(i, j, do_antialias);
                     pixel_color += ray_color(ray, max_depth, object);
                 }
                 write_color(file, pixel_samples_scale * pixel_color); // Now writes to file
@@ -140,7 +145,7 @@ public:
             for (int i = 0; i < image_width; ++i) {
                 Color pixel_color(0,0,0);
                 for (int sample = 0; sample < samples_per_pixel; ++sample) {
-                    Ray ray = get_ray(i, j);
+                    Ray ray = get_ray(i, j, do_antialias);
                     pixel_color += ray_color(ray, max_depth, object);
                 }
                 write_color_px(pixels, pixel_samples_scale * pixel_color, (j * image_width + i) * 3);
@@ -219,7 +224,7 @@ public:
                 for (int i = 0; i < image_width; ++i) {
                     Color pixel_color(0,0,0);
                     for (int sample = 0; sample < samples_per_pixel; ++sample) {
-                        Ray ray = get_ray(i, j);
+                        Ray ray = get_ray(i, j, do_antialias);
                         pixel_color += ray_color(ray, max_depth, object);
                     }
                     int index = (j * image_width + i) * 3;
@@ -279,7 +284,7 @@ private:
     Vector3d   pixel_delta_v;   // Offset to pixel below
     Vector3d   u, v, w;         // Camera frame basis vectors
     Vector3d   defocus_disk_u;  // Defocus disk horizontal radius
-    Vector3d   defocus_disk_v;  // Defocus disk vertical radius
+    Vector3d   defocus_disk_v;  // Defocus disk vertical radius;
 
     void initialize() {
         image_height = int(image_width / aspect_ratio);
@@ -320,7 +325,7 @@ private:
         defocus_disk_v = v * defocus_radius;
     }
 
-    Ray get_ray(int i, int j) const {
+    Ray get_ray(int i, int j, bool do_antialias) const {
         // Construct a camera ray originating from the defocus disk and directed at a randomly
         // sampled point around the pixel location i, j
         // TODO HERE ADD CONTROL ON RANDOM ANTIALIASING AND BLURING
@@ -329,7 +334,7 @@ private:
         //  - SHAPE OF CAMERA
         //  - SELF-ADAPTED SAMPLING?
         //  - MORE PARAMS TO CONTROL THE BLUR?
-        auto offset = pixel_sample_square();
+        auto offset = (do_antialias) ? pixel_sample_square() : Vector3d(0, 0, 0);
         auto pixel_sample = pixel_00_loc
                             + ((i + offset.get_x()) * pixel_delta_u)
                             + ((j + offset.get_y()) * pixel_delta_v);
@@ -377,7 +382,7 @@ private:
             for (int x = 0; x < image_width; ++x) {
                 Color pixel_color(0,0,0);
                 for (int sample = 0; sample < samples_per_pixel; ++sample) {
-                    Ray ray = get_ray(x, y);
+                    Ray ray = get_ray(x, y, do_antialias);
                     pixel_color += ray_color(ray, max_depth, object);
                 }
                 linesBuffer[y][x] = pixel_samples_scale * pixel_color;
