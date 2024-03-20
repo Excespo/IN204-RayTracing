@@ -34,6 +34,10 @@ inline double random_double(double min, double max) {
     return min + (max - min) * random_double();
 }
 
+inline int random_int(int min, int max) {
+    return static_cast<int>(random_double(min, max+1));
+}
+
 class ProgressBar {
 public:
     explicit ProgressBar(int total_steps) : total_steps(total_steps), start_time(std::chrono::high_resolution_clock::now()) {}

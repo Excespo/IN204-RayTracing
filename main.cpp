@@ -13,8 +13,8 @@ HittableList construct() {
     auto ground_material = std::make_shared<Lambertian>(Color(0.2, 0.2, 0.2));
     world.add(std::make_shared<Sphere>(Point3d(0,-1000,0), 1000, ground_material));
 
-    for (int a = -11; a < 11; a++) {
-        for (int b = -11; b < 11; b++) {
+    for (int a = -5; a < 5; a++) {
+        for (int b = -5; b < 5; b++) {
             auto choose_mat = random_double();
             Point3d center(a + 0.9*random_double(), 0.2, b + 0.9*random_double());
 
@@ -41,6 +41,28 @@ HittableList construct() {
         }
     }
 
+    auto left_red_diffuse = std::make_shared<Lambertian>(Color(1.0, 0.2, 0.2));
+    auto back_green_diffuse = std::make_shared<Lambertian>(Color(0.2, 1.0, 0.2));
+    auto right_blue_metal = std::make_shared<Metal>(Color(0.2, 0.2, 1.0), random_double(0, 0.5));
+    auto upper_teal_metal = std::make_shared<Metal>(Color(0.2, 0.8, 0.8), random_double(0, 0.5));
+    auto lower_teal_glass = std::make_shared<Dielectric>(-1);
+
+    world.add(std::make_shared<Quadrilateral>(
+            Point3d(-3, -2, 5), Vector3d(0, 0, -4), Vector3d(0, 4, 0),
+            left_red_diffuse));
+    world.add(std::make_shared<Quadrilateral>(
+            Point3d(-2, -2, 0), Vector3d(4, 0, 0), Vector3d(0, 4, 0),
+            back_green_diffuse));
+    world.add(std::make_shared<Quadrilateral>(
+            Point3d(3, -2, 1), Vector3d(0, 0, 4), Vector3d(0, 4, 0),
+            right_blue_metal));
+    world.add(std::make_shared<Quadrilateral>(
+            Point3d(-2, 3, 1), Vector3d(4, 0, 0), Vector3d(0, 0, 4),
+            upper_teal_metal));
+    world.add(std::make_shared<Quadrilateral>(
+            Point3d(-2, -3, 5), Vector3d(4, 0, 0), Vector3d(0, 0, -4),
+            lower_teal_glass));
+
     auto material1 = std::make_shared<Dielectric>(1.5);
     world.add(std::make_shared<Sphere>(Point3d(0, 1, 0), 1.0, material1));
 
@@ -49,6 +71,9 @@ HittableList construct() {
 
     auto material3 = std::make_shared<Metal>(Color(0.7, 0.6, 0.5), 0.0);
     world.add(std::make_shared<Sphere>(Point3d(4, 1, 0), 1.0, material3));
+
+    // Use BVH to reduce complexity
+    world = HittableList(std::make_shared<BVH_Node>(world));
 
     return world;
 }
