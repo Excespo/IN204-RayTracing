@@ -5,6 +5,7 @@
 #ifndef RAY_TRACING_COMMON_H
 #define RAY_TRACING_COMMON_H
 
+#include "args.h"
 #include "utils.h"
 #include "vector.h"
 #include "interval.h"
