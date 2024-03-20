@@ -23,6 +23,7 @@ public:
     bool use_parallel;
     int num_threads;
     string output;
+    string log;
     
     RenderParams()
             : use_anti_alias(true), use_parallel(true), num_threads(4), output("cout") {}
@@ -102,7 +103,7 @@ private:
         u = unit_vector(cross(vec_up, w));
         v = cross(w, u);
         std::clog << "Coordinates of camera are:\n";
-        std::clog << "w: " << w << ",u: " << u << ",v: " << v << "\n";
+        std::clog << "w: " << w << "\nu: " << u << "\nv: " << v << "\n";
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
         Vector3d viewport_u = viewport_width * u;    // Vector across viewport horizontal edge
@@ -205,7 +206,7 @@ private:
                 write_color_PPM(std::cout, pixel_samples_scale * pixel_color); // take average of multi-sampling
             }
         }
-        pb.done();
+        pb.done(rp.log);
     }
 
     void renderToPPM(const Hittable& world, const std::string& filePath) {
@@ -218,23 +219,12 @@ private:
         }
 
         initialize();
+        ProgressBar pb(image_height);
 
         file << "P3\n" << image_width << ' ' << image_height << "\n255\n";
-        auto start = std::chrono::high_resolution_clock::now();
 
-        const int progressBarWidth = 50;
         for (int j = 0; j < image_height; ++j) {
-            // Progress bar, still output to console
-            double progress = double(j) / image_height;
-            int pos = int(progressBarWidth * progress);
-            std::clog << "\r[";
-            for (int k = 0; k < progressBarWidth; ++k) {
-                if (k < pos) std::clog << "=";
-                else if (k == pos) std::clog << ">";
-                else std::clog << " ";
-            }
-            std::clog << "] " << int(progress * 100.0) << "% " << "Lines Remaining: " << (image_height - j) << " ";
-            std::clog << std::flush; // Ensure immediate output
+            pb.update(j);
 
             for (int i = 0; i < image_width; ++i) {
                 Color pixel_color(0,0,0);
@@ -246,31 +236,16 @@ private:
             }
         }
         file.close();
-
-        std::clog << std::endl << "Done.\n";
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
-        std::clog << "Time elapsed: " << elapsed.count() << "s" << std::endl;
+        pb.done(rp.log);
     }
 
     void renderToPNG(const Hittable& world, const std::string& filePath) {
         initialize();
-
+        ProgressBar pb(image_height);
         std::vector<unsigned char> pixels(image_width * image_height * 3);
-        const int progressBarWidth = 50;
-        auto start = std::chrono::high_resolution_clock::now();
 
         for (int j = 0; j < image_height; ++j) {
-            double progress = double(j) / image_height;
-            int pos = int(progressBarWidth * progress);
-            std::clog << "\r[";
-            for (int k = 0; k < progressBarWidth; ++k) {
-                if (k < pos) std::clog << "=";
-                else if (k == pos) std::clog << ">";
-                else std::clog << " ";
-            }
-            std::clog << "] " << int(progress * 100.0) << "% " << "Lines Remaining: " << (image_height - j) << " ";
-            std::clog << std::flush; // Ensure immediate output
+            pb.update(j);
 
             for (int i = 0; i < image_width; ++i) {
                 Color pixel_color(0,0,0);
@@ -289,10 +264,7 @@ private:
         }
         svpng(fp, image_width, image_height, pixels.data(), 0);
         fclose(fp);
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
-        std::clog << std::endl << "Done.\n";
-        std::clog << "Time elapsed: " << elapsed.count() << "s" << std::endl;
+        pb.done(rp.log);
     }
 
     void renderToPPM_parallel(const Hittable& world, const std::string& filePath, int numThreads) {
@@ -303,9 +275,10 @@ private:
         }
 
         initialize();
+        ProgressBar pb(image_height);
+        std::clog << "progress bar disabled here.\n";
 
         file << "P3\n" << image_width << ' ' << image_height << "\n255\n";
-        auto start = std::chrono::high_resolution_clock::now();
 
         std::vector<std::thread> threads;
         std::vector<std::vector<Color>> linesBuffer(image_height, std::vector<Color>(image_width));
@@ -333,16 +306,12 @@ private:
         }
 
         file.close();
-        std::clog << "Done.\n";
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
-        std::clog << "Time elapsed: " << elapsed.count() << "s" << std::endl;
 
     }
 
     void renderToPNG_parallel(const Hittable& world, const std::string& filePath, int numThreads) {
         initialize();
-
+        ProgressBar pb(image_height);
         std::vector<unsigned char> pixels(image_width * image_height * 3);
         std::vector<std::thread> threads;
         std::mutex progressMutex;
