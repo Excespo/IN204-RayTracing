@@ -77,12 +77,12 @@ int main(int argc, char** argv) {
     if(!parse(argc, argv, cli)) std::clog << make_man_page(cli, argv[0]);
     args.print(std::clog);
 
-    std::ofstream file(args.message_to_file);
+    std::ofstream file(args.message_to_file, std::ios::out | std::ios::app);
     if (!file.is_open()) {
         std::cerr << "Failed to open file: " << args.message_to_file << std::endl;
         return 1;
     }
-    file << args.output_file << ":\n\t" << args.message << std::endl;
+    file << "\n\n" << args.output_file << ":\n\t" << args.message << std::endl;
     args.print(file);
     file.close();
 
