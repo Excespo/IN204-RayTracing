@@ -1,17 +1,35 @@
 # IN204-Project
 Ray tracing with c++
 
-# Directory
-
 # Usage
+For more scenarios than the demo given by `main.cpp`, edit this `construct` function in source code with the following instructions:
+
+Construct a list for all objects to be rendered : `HittableList world`
+
+Define a material with : `auto material = std::make_shared<MATERIAL>(Color(R,G,B))`
+
+Define a geometry with : `auto geo = std::make_shared<GEOMETRY>(Point3d(X,Y,Z), RADIUS, material)`
+
+Add this geometry to world : `world.add(geo)`
+
+Then just build and run the ray tracing program!
+
+Currently supported options for MATERIAL are:
+ - Lambertian : Material to simulate objects that cause diffusion reflection
+ - Metal : Material to simulate metal objects
+ - Dielectric : Material to simulate glass-like objects
 
 # Build and run
 ```bash
-cmake -B build
-cmake --build
-
-build/ray-tracing > image.ppm
+bash run.sh
 ```
+Change the variables in script for different work mode
+ - -n_samples : Number of samples per pixel during rendering
+ - -max_depth : Maximum recursion depth for one ray
+ - -image_width : Width of image rendered
+ - -n_threads : Threads used in parallel mode
+ - -p : parallel mode on
+ - -a : anti-alias mode on
 
 # Theoretical explanation
 
