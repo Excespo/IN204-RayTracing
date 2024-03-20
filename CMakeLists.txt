@@ -23,5 +23,4 @@ add_executable(ray_tracing main.cpp
         common.h
         clipp.h
         args.h
-        render.h
 )
