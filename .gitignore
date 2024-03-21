@@ -10,3 +10,8 @@ out.txt
 *.jpg
 
 build
+result
+image
+
+# VS Code
+.vscode
