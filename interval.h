@@ -54,4 +54,12 @@ public:
 const Interval Interval::empty = Interval(inf, -inf);
 const Interval Interval::universe = Interval(-inf, inf);
 
+Interval operator+(const Interval& in, double displacement) {
+    return Interval(in.get_min() + displacement, in.get_max() + displacement);
+}
+
+Interval operator+(double displacement, const Interval& in) {
+    return in + displacement;
+}
+
 #endif //RAY_TRACING_INTERVAL_H

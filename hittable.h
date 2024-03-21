@@ -72,6 +72,14 @@ private:
     AABB bbox;
 };
 
+class translate: public Hittable {
+    // TODO
+};
+
+class rotate_y: public Hittable {
+    // TODO
+};
+
 class BVH_Node: public Hittable {
 public:
     explicit BVH_Node(HittableList list) : BVH_Node(list.objects, 0, list.objects.size()) {}
