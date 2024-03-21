@@ -32,15 +32,16 @@ public:
         if (discriminant < 0) return false;
         auto sqrt_dis = std::sqrt(discriminant);
         auto root = (half_b - sqrt_dis) / a;
-        if (!t_ray.contains(root)) {
+        if (!t_ray.surrounds(root)) {
             root = (half_b + sqrt_dis) / a;
-            if (!t_ray.contains(root)) return false;
+            if (!t_ray.surrounds(root)) return false;
         }
 
         stat.t = root;
         stat.hit_point = ray.at(stat.t);
         Vector3d outward_normal = (stat.hit_point - center) / radius;
         stat.set_face_normal(ray, outward_normal);
+        get_sphere_uv(outward_normal, stat.u, stat.v);
         stat.material = material;
         return true;
     }
@@ -49,12 +50,27 @@ private:
     double radius;
     std::shared_ptr<Material> material;
     AABB bbox;
+
+    static void get_sphere_uv(const Point3d& p, double& u, double& v) {
+        // p: a given point on the sphere of radius one, centered at the origin.
+        // u: returned value [0,1] of angle around the Y axis from X=-1.
+        // v: returned value [0,1] of angle from Y=-1 to Y=+1.
+        //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
+        //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
+        //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
+
+        auto theta = std::acos(-p.get_y());
+        auto phi = std::atan2(-p.get_y(), p.get_y()) + pi;
+
+        u = phi / (2*pi);
+        v = theta / pi;
+    }
 };
 
 class Quadrilateral: public Hittable {
 public:
     Quadrilateral(const Point3d& Q, const Vector3d& u, const Vector3d& v, std::shared_ptr<Material> material)
-        : Q(Q), u(u), v(v), material(material) {
+        : Q(Q), u(u), v(v), material(std::move(material)) {
         auto n = cross(u, v);
         normal = unit_vector(n);
         D = dot(normal, Q);
@@ -63,7 +79,8 @@ public:
         set_bounding_box();
     }
 
-    virtual void set_bounding_box() {
+    void set_bounding_box() {
+//    virtual void set_bounding_box() {
         auto bbox_diagonal1 = AABB(Q, Q+u+v);
         auto bbox_diagonal2 = AABB(Q+u, Q+v);
         bbox = AABB(bbox_diagonal1, bbox_diagonal2);

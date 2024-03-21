@@ -35,6 +35,10 @@ public:
         return min <= x && x <= max;
     }
 
+    bool surrounds(double x) const {
+        return min < x && x < max;
+    }
+
     [[nodiscard]] double clamp(double x) const  {
         if (x < min)
             return min;

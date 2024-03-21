@@ -12,9 +12,10 @@ HittableList construct() {
 
     auto ground_material = std::make_shared<Lambertian>(Color(0.2, 0.2, 0.2));
     world.add(std::make_shared<Sphere>(Point3d(0,-1000,0), 1000, ground_material));
+    std::clog <<"GO2\n";
 
-    for (int a = -5; a < 5; a++) {
-        for (int b = -5; b < 5; b++) {
+    for (int a = -11; a < 11; a++) {
+        for (int b = -11; b < 11; b++) {
             auto choose_mat = random_double();
             Point3d center(a + 0.9*random_double(), 0.2, b + 0.9*random_double());
 
@@ -72,6 +73,7 @@ HittableList construct() {
     auto material3 = std::make_shared<Metal>(Color(0.7, 0.6, 0.5), 0.0);
     world.add(std::make_shared<Sphere>(Point3d(4, 1, 0), 1.0, material3));
 
+    std::clog << "WORLD\n";
     // Use BVH to reduce complexity
     world = HittableList(std::make_shared<BVH_Node>(world));
 
