@@ -1,5 +1,16 @@
 {
-  "objects": [
+  "Objects": [
+    {
+      "type": "Triangle",
+      "v1": [-3, -2, 5],
+      "v2": [1, 0, 0],
+      "v3": [4, 3, 3],
+      "material": {
+        "type": "Metal",
+        "color": [0.7, 0.6, 0.5],
+        "fuzz": 0.0
+      }
+    },
     {
       "type": "Sphere",
       "center": [0, -1000, 0],
@@ -50,27 +61,6 @@
       "material": {
         "type": "Lambertian",
         "color": [1.0, 0.2, 0.2]
-      }
-    },
-    {
-      "type": "Quadrilateral",
-      "vertex": [-2, -2, 0],
-      "edge1": [4, 0, 0],
-      "edge2": [0, 4, 0],
-      "material": {
-        "type": "Lambertian",
-        "color": [0.2, 1.0, 0.2]
-      }
-    },
-    {
-      "type": "Quadrilateral",
-      "vertex": [3, -2, 1],
-      "edge1": [0, 0, 4],
-      "edge2": [0, 4, 0],
-      "material": {
-        "type": "Metal",
-        "color": [0.2, 0.2, 1.0],
-        "fuzz": 0.25
       }
     }
   ]

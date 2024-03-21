@@ -162,8 +162,71 @@ inline std::shared_ptr<HittableList> box(const Point3d& a, const Point3d& b, std
     return sides;
 }
 
-class Triangle: public Hittable {
-    // TODO
+class Triangle : public Hittable {
+public:
+    Triangle(const Point3d& v0, const Point3d& v1, const Point3d& v2, std::shared_ptr<Material> material)
+        : v0(v0), v1(v1), v2(v2), material(material) {
+        // Precompute normal for efficiency
+        normal = unit_vector(cross(v1 - v0, v2 - v0));
+        // Set up bounding box
+        set_bounding_box();
+    }
+
+    bool hit(const Ray& ray, Interval t_ray, HitStatus& stat) const override {
+        Vector3d e1 = v1 - v0;
+        Vector3d e2 = v2 - v0;
+        Vector3d h = cross(ray.direction(), e2);
+        double a = dot(e1, h);
+
+        if (a > -1e-8 && a < 1e-8) {
+            return false;  // This means the ray is parallel to this triangle.
+        }
+
+        double f = 1.0 / a;
+        Vector3d s = ray.origin() - v0;
+        double u = f * dot(s, h);
+
+        if (u < 0.0 || u > 1.0) {
+            return false;
+        }
+
+        Vector3d q = cross(s, e1);
+        double v = f * dot(ray.direction(), q);
+
+        if (v < 0.0 || u + v > 1.0) {
+            return false;
+        }
+
+        // At this stage we can compute t to find out where the intersection point is on the line.
+        double t = f * dot(e2, q);
+
+        if (t > t_ray.get_min() && t < t_ray.get_max()) {
+            stat.t = t;
+            stat.hit_point = ray.at(t);
+            stat.set_face_normal(ray, normal);  // Ensure proper orientation of the normal
+            stat.material = material;
+            return true;
+        }
+
+        // This means that there is a line intersection but not a ray intersection.
+        return false;
+    }
+
+    AABB bounding_box() const override {
+        return bbox;
+    }
+
+private:
+    Point3d v0, v1, v2;
+    Vector3d normal;
+    std::shared_ptr<Material> material;
+    AABB bbox;
+
+    void set_bounding_box() {
+        Point3d min(fmin(fmin(v0.get_x(), v1.get_x()), v2.get_x()), fmin(fmin(v0.get_y(), v1.get_y()), v2.get_y()), fmin(fmin(v0.get_z(), v1.get_z()), v2.get_z()));
+        Point3d max(fmax(fmax(v0.get_x(), v1.get_x()), v2.get_x()), fmax(fmax(v0.get_y(), v1.get_y()), v2.get_y()), fmax(fmax(v0.get_z(), v1.get_z()), v2.get_z()));
+        bbox = AABB(min, max);
+    }
 };
 
 #endif //RAY_TRACING_GEOMETRY_H
