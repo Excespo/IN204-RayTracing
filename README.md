@@ -32,26 +32,47 @@ Currently supported options for GEOMETRY are:
  - Box
 
 # Build and run
+
+## For Linux Users
+
+Run the following command in your terminal:
+
 ```bash
 bash run.sh
 ```
+
+## For Windows Users
+
+Run the following command in your Command Prompt:
+
+```bash
+.\run.bat
+```
+
+## Configuration Options
+
+Both scripts allow you to change variables for different work modes. Here are the options you can configure:
+
 Change the variables in script for different work mode
- - -n_samples : Number of samples per pixel during rendering
- - -max_depth : Maximum recursion depth for one ray
- - -image_width : Width of image rendered
- - -n_threads : Threads used in parallel mode
- - -p : parallel mode on
- - -a : anti-alias mode on
+
+- -n_samples : Number of samples per pixel during rendering
+- -max_depth : Maximum recursion depth for one ray
+- -image_width : Width of image rendered
+- -n_threads : Threads used in parallel mode
+- -p : parallel mode on
+- -a : anti-alias mode on
 
 # Log
+
 `result/log.txt` : you can find the corresponding parameters and elapsed time appended in this file after every run.
 
 # Caracteristics to be implemented
- - Texture (mapping from 2d to 3d)
- - OOP on color.h
- - Geometry like triangle
- - Light source
- - Motion of objects
- - Fix the noisy points
- - CUDA support
- - Optimisation on design(Matrix operation, Search for object hits)
+
+- Texture (mapping from 2d to 3d)
+- OOP on color.h
+- Geometry like triangle
+- Light source
+- Motion of objects
+- Fix the noisy points
+- CUDA support
+- Optimisation on design(Matrix operation, Search for object hits)
