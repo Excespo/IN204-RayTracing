@@ -16,8 +16,8 @@ public:
     Sphere(const Point3d& center, double radius, std::shared_ptr<Material> material)
             : center(center), radius(fmax(radius,0)), material(std::move(material))
     {
-        auto radvec = Vector3d(radius, radius, radius);
-        bbox = AABB(center - radvec, center + radvec);
+        auto rvec = Vector3d(radius, radius, radius);
+        bbox = AABB(center - rvec, center + rvec);
     }
 
     AABB bounding_box() const override { return bbox; }
@@ -60,7 +60,7 @@ private:
         //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
 
         auto theta = std::acos(-p.get_y());
-        auto phi = std::atan2(-p.get_y(), p.get_y()) + pi;
+        auto phi = std::atan2(-p.get_y(), p.get_x()) + pi;
 
         u = phi / (2*pi);
         v = theta / pi;
