@@ -55,7 +55,7 @@ HittableList load_scene(const std::string& filename) {
 
     HittableList world;
 
-    for (const auto& obj : scene["objects"]) {
+    for (const auto& obj : scene["Objects"]) {
         if (obj["type"] == "Sphere") {
             Point3d center(obj["center"][0], obj["center"][1], obj["center"][2]);
             double radius = obj["radius"];
@@ -67,6 +67,12 @@ HittableList load_scene(const std::string& filename) {
             Vector3d edge2(obj["edge2"][0], obj["edge2"][1], obj["edge2"][2]);
             auto material = parse_material(obj["material"]);
             world.add(std::make_shared<Quadrilateral>(vertex, edge1, edge2, material));
+        } else if (obj["type"] == "Triangle") {
+            Point3d vertex1(obj["v1"][0], obj["v1"][1], obj["v1"][2]);
+            Point3d vertex2(obj["v2"][0], obj["v2"][1], obj["v2"][2]);
+            Point3d vertex3(obj["v3"][0], obj["v3"][1], obj["v3"][2]);
+            auto material = parse_material(obj["material"]);
+            world.add(std::make_shared<Triangle>(vertex1, vertex2, vertex3, material));
         }
     }
     return world;

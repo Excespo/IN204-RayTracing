@@ -30,6 +30,7 @@ Currently supported options for MATERIAL are:
 Currently supported options for GEOMETRY are:
  - Sphere
  - Box
+ - Triangle
 
 # Build and run
 
@@ -70,9 +71,7 @@ Change the variables in script for different work mode
 
 - Texture (mapping from 2d to 3d)
 - OOP on color.h
-- Geometry like triangle
 - Light source
 - Motion of objects
 - Fix the noisy points
-- CUDA support
 - Optimisation on design(Matrix operation, Search for object hits)
