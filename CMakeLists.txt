@@ -26,6 +26,8 @@ add_executable(ray_tracing main.cpp
         Utilities/common.h
         Utilities/debug.h
         Utilities/svpng.inc
+        Utilities/json.hpp
+        Geometry/load_scene.h
         Math/interval.h
         Math/ray.h
         Math/vector.h
