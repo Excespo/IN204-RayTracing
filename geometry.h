@@ -80,7 +80,7 @@ public:
     }
 
     void set_bounding_box() {
-//    virtual void set_bounding_box() {
+//    virtual void set_bounding_b.get_x() {
         auto bbox_diagonal1 = AABB(Q, Q+u+v);
         auto bbox_diagonal2 = AABB(Q+u, Q+v);
         bbox = AABB(bbox_diagonal1, bbox_diagonal2);
@@ -127,7 +127,7 @@ public:
     }
 
 private:
-    Point3d Q; // left bottom corner of quad
+    Point3d Q; // left bottom corner of Quadrilateral
     Vector3d u; // vector leading to one side
     Vector3d v; // vector leading to another side
     Vector3d w;
@@ -136,6 +136,30 @@ private:
     Vector3d normal;
     double D;
 };
+
+inline std::shared_ptr<HittableList> box(const Point3d& a, const Point3d& b, std::shared_ptr<Material> mat)
+{
+    // Returns the 3D box (six sides) that contains the two opposite vertices a & b.
+
+    auto sides = std::make_shared<HittableList>();
+
+    // Construct the two opposite vertices with the minimum and maximum coordinates.
+    auto min = Point3d(fmin(a.get_x(), b.get_x()), fmin(a.get_y(), b.get_y()), fmin(a.get_z(), b.get_z()));
+    auto max = Point3d(fmax(a.get_x(), b.get_x()), fmax(a.get_y(), b.get_y()), fmax(a.get_z(), b.get_z()));
+
+    auto dx = Vector3d(max.get_x() - min.get_x(), 0, 0);
+    auto dy = Vector3d(0, max.get_y() - min.get_y(), 0);
+    auto dz = Vector3d(0, 0, max.get_z() - min.get_z());
+
+    sides->add(std::make_shared<Quadrilateral>(Point3d(min.get_x(), min.get_y(), max.get_z()),  dx,  dy, mat)); // front
+    sides->add(std::make_shared<Quadrilateral>(Point3d(max.get_x(), min.get_y(), max.get_z()), -dz,  dy, mat)); // right
+    sides->add(std::make_shared<Quadrilateral>(Point3d(max.get_x(), min.get_y(), min.get_z()), -dx,  dy, mat)); // back
+    sides->add(std::make_shared<Quadrilateral>(Point3d(min.get_x(), min.get_y(), min.get_z()),  dz,  dy, mat)); // left
+    sides->add(std::make_shared<Quadrilateral>(Point3d(min.get_x(), max.get_y(), max.get_z()),  dx, -dz, mat)); // top
+    sides->add(std::make_shared<Quadrilateral>(Point3d(min.get_x(), min.get_y(), min.get_z()),  dx,  dz, mat)); // bottom
+
+    return sides;
+}
 
 class Triangle: public Hittable {
     // TODO

@@ -36,6 +36,7 @@ Change the variables in script for different work mode
 
 # Caracteristics to be implemented
  - Texture (mapping from 2d to 3d)
+ - OOP on color.h
  - Geometry like triangle
  - Light source
  - Motion of objects

@@ -24,4 +24,5 @@ add_executable(ray_tracing main.cpp
         clipp.h
         args.h
         aabb.h
+        texture.h
 )
