@@ -303,6 +303,7 @@ private:
         std::mutex progressMutex;
         int completedLines = 0;
 
+        auto start = std::chrono::high_resolution_clock::now();
         int linesPerThread = image_height / numThreads;
         for (int i = 0; i < numThreads; ++i) {
             int startLine = i * linesPerThread;
@@ -327,7 +328,10 @@ private:
         }
 
         file.close();
-        std::clog << "\nRendering complete.\n";
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::clog << std::endl << "Done.\n";
+        std::clog << "Time elapsed: " << elapsed.count() << "s" << std::endl;
     }
 
 
