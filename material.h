@@ -6,6 +6,7 @@
 #define RAY_TRACING_MATERIAL_H
 
 #include <utility>
+#include <iostream>
 
 #include "common.h"
 #include "hittable.h"

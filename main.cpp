@@ -14,7 +14,6 @@ HittableList construct() {
 //    auto ground_material = std::make_shared<Lambertian>(Color(0.2, 0.2, 0.2));
     auto checker = make_shared<CheckerTexture>(0.32, Color(0.2, 0.3, 0.1), Color(0.9, 0.9, 0.9));
     world.add(std::make_shared<Sphere>(Point3d(0,-1000,0), 1000, make_shared<Lambertian>(checker)));
-    std::clog <<"GO2\n";
 
     for (int a = -11; a < 11; a++) {
         for (int b = -11; b < 11; b++) {

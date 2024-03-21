@@ -41,12 +41,12 @@ public:
     std::vector<std::shared_ptr<Hittable>> objects;
 
     HittableList() = default;
-    explicit HittableList(std::shared_ptr<Hittable> obj) { add(std::move(obj)); }
+    explicit HittableList(std::shared_ptr<Hittable> obj) { add(obj); }
 
     void clear() { objects.clear(); }
 
     void add(std::shared_ptr<Hittable> obj) {
-        objects.push_back(std::move(obj));
+        objects.push_back(obj); // DONT USE STD::MOVE HERE BECAUSE WE USE OBJ LATER!!
         bbox = AABB(bbox, obj->bounding_box());
     }
 
