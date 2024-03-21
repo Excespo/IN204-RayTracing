@@ -22,4 +22,4 @@ MESSAGE="n_samples=${n_samples}, max_depth=${max_depth}, image_width=${image_wid
 
 build/ray_tracing ${output_file} -m "${MESSAGE}" \
                   -s ${n_samples} -d ${max_depth} -w ${image_width} -a \
-                  -p -n ${n_threads}
+                  -p -n ${n_threads} -f scene.json

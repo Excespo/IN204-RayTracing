@@ -6,6 +6,7 @@
 #include "material.h"
 #include "geometry.h"
 #include "texture.h"
+#include "load_scene.h"
 
 // Only function to be modified by users
 HittableList construct() {
@@ -86,6 +87,8 @@ int main(int argc, char** argv) {
     Args args;
     auto cli = (
             value("output_file", args.output_file).doc("output image to OUTPUT_FILE"),
+            option("-f", "-file").doc("load scene from SCENE_FILE")
+                & value("scene_file", args.scene_file),
             option("-m", "-message").doc("MESSAGE written to result/log.txt")
                 & value("MESSAGE", args.message),
             option("-p", "--parallel").set(args.parallel).doc("run ray-tracing program in parallelization"),
@@ -114,7 +117,13 @@ int main(int argc, char** argv) {
     file.close();
 
     // Construct all world
-    HittableList world = construct();
+    // If args.scene_file is provided, load scene from file
+    HittableList world;
+    if (!args.scene_file.empty()){
+        world = load_scene(args.scene_file);
+    } else {
+        world = construct();
+    }
 
     // Initialize camera
     Camera cam;

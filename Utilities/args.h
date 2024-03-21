@@ -15,6 +15,7 @@ using namespace clipp;
 class Args {
 public:
     string output_file;
+    string scene_file;
     bool parallel = true;
     int num_threads = 8;
     bool anti_alias = true;
