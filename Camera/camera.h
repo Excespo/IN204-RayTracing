@@ -175,18 +175,36 @@ private:
     }
 
     // 将渲染单个区域（一组行）的任务分配给线程
-    void renderSection(const Hittable& world, int startY, int endY, std::vector<std::vector<Color>>& linesBuffer) {
+    void renderSection(const Hittable& world, int startY, int endY, std::vector<std::vector<Color>>& linesBuffer, int& completedLines, std::mutex& progressMutex) {
+        int progressBarWidth = 50;
         for (int y = startY; y < endY; ++y) {
             for (int x = 0; x < image_width; ++x) {
-                Color pixel_color(0,0,0);
+                Color pixel_color(0, 0, 0);
                 for (int sample = 0; sample < samples_per_pixel; ++sample) {
                     Ray ray = get_ray(x, y, rp.use_anti_alias);
                     pixel_color += ray_color(ray, max_depth, world);
                 }
                 linesBuffer[y][x] = pixel_samples_scale * pixel_color;
             }
+            // Progress update
+            {
+                std::lock_guard<std::mutex> lock(progressMutex);
+                completedLines++;
+                // Optional: Progress output can be handled here or elsewhere
+                double progress = double(completedLines) / image_height;
+                int pos = int(progressBarWidth * progress);
+                std::clog << "\r[";
+                for (int k = 0; k < progressBarWidth; ++k) {
+                    if (k < pos) std::clog << "=";
+                    else if (k == pos) std::clog << ">";
+                    else std::clog << " ";
+                }
+                std::clog << "] " << int(progress * 100.0) << "% " << "Lines Remaining: " << (image_height - completedLines) << " ";
+                std::clog << std::flush; // Ensure immediate output
+            }
         }
     }
+
 
     void renderToCOUT(const Hittable& world) {
         initialize();
@@ -268,37 +286,40 @@ private:
     }
 
     void renderToPPM_parallel(const Hittable& world, const std::string& filePath, int numThreads) {
-        std::ofstream file(filePath);
+    std::ofstream file(filePath);
         if (!file.is_open()) {
             std::cerr << "Failed to open file: " << filePath << std::endl;
             return;
         }
 
         initialize();
-        ProgressBar pb(image_height);
-        std::clog << "progress bar disabled here.\n";
+        std::clog << "Starting rendering...\n";
 
         file << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
         std::vector<std::thread> threads;
         std::vector<std::vector<Color>> linesBuffer(image_height, std::vector<Color>(image_width));
 
+        std::mutex progressMutex;
+        int completedLines = 0;
+
         int linesPerThread = image_height / numThreads;
         for (int i = 0; i < numThreads; ++i) {
             int startLine = i * linesPerThread;
             int endLine = (i + 1) * linesPerThread;
             if (i == numThreads - 1) {
-                endLine = image_height; // 确保最后一个线程能够处理所有剩余的行
+                endLine = image_height; // Ensure the last thread handles all remaining lines
             }
-            // 注意这里的使用方式
-            threads.push_back(std::thread(&Camera::renderSection, this, std::ref(world), startLine, endLine, std::ref(linesBuffer)));
+            threads.push_back(std::thread([&, startLine, endLine]() {
+                renderSection(world, startLine, endLine, std::ref(linesBuffer), std::ref(completedLines), std::ref(progressMutex));
+            }));
         }
 
         for (auto& t : threads) {
-            t.join(); // 等待所有线程完成
+            t.join(); // Wait for all threads to finish
         }
 
-        // 写入渲染结果
+        // Write the lines to the file
         for (const auto& line : linesBuffer) {
             for (const auto& color : line) {
                 write_color_PPM(file, color);
@@ -306,46 +327,17 @@ private:
         }
 
         file.close();
-
+        std::clog << "\nRendering complete.\n";
     }
+
 
     void renderToPNG_parallel(const Hittable& world, const std::string& filePath, int numThreads) {
         initialize();
-        ProgressBar pb(image_height);
-        std::vector<unsigned char> pixels(image_width * image_height * 3);
+        std::vector<std::vector<Color>> linesBuffer(image_height, std::vector<Color>(image_width));
         std::vector<std::thread> threads;
         std::mutex progressMutex;
         int completedLines = 0;
-        const int progressBarWidth = 50;
 
-        auto renderSection = [&](int startY, int endY) {
-            for (int j = startY; j < endY; ++j) {
-                for (int i = 0; i < image_width; ++i) {
-                    Color pixel_color(0,0,0);
-                    for (int sample = 0; sample < samples_per_pixel; ++sample) {
-                        Ray ray = get_ray(i, j, rp.use_anti_alias);
-                        pixel_color += ray_color(ray, max_depth, world);
-                    }
-                    int index = (j * image_width + i) * 3;
-                    auto scaledColor = pixel_samples_scale * pixel_color;
-                    write_color_PNG(pixels, scaledColor, index);
-                }
-                {
-                    std::lock_guard<std::mutex> lock(progressMutex);
-                    completedLines++;
-                    double progress = double(completedLines) / image_height;
-                    int pos = int(progressBarWidth * progress);
-                    std::clog << "\r[";
-                    for (int k = 0; k < progressBarWidth; ++k) {
-                        if (k < pos) std::clog << "=";
-                        else if (k == pos) std::clog << ">";
-                        else std::clog << " ";
-                    }
-                    std::clog << "] " << int(progress * 100.0) << "% " << "Lines Remaining: " << (image_height - completedLines) << " ";
-                    std::clog << std::flush; // Ensure immediate output
-                }
-            }
-        };
         auto start = std::chrono::high_resolution_clock::now();
         int linesPerThread = image_height / numThreads;
         for (int i = 0; i < numThreads; ++i) {
@@ -354,13 +346,30 @@ private:
             if (i == numThreads - 1) {
                 endLine = image_height; // Ensure the last thread handles all remaining lines
             }
-            threads.emplace_back(renderSection, startLine, endLine);
+            // Utilizing the universal renderSection function
+            // threads.emplace_back([&world, startLine, endLine, &linesBuffer, &completedLines, &progressMutex](){
+            //     renderSection(world, startLine, endLine, linesBuffer, completedLines, progressMutex);
+            // });
+            threads.push_back(std::thread([&, startLine, endLine]() {
+                renderSection(world, startLine, endLine, std::ref(linesBuffer), std::ref(completedLines), std::ref(progressMutex));
+            }));
         }
 
         for (auto& thread : threads) {
             thread.join();
         }
 
+        // After rendering, convert the Color data in linesBuffer to pixel data for the PNG
+        std::vector<unsigned char> pixels(image_width * image_height * 3);
+        for (int j = 0; j < image_height; ++j) {
+            for (int i = 0; i < image_width; ++i) {
+                int index = (j * image_width + i) * 3;
+                auto& color = linesBuffer[j][i];
+                write_color_PNG(pixels, color, index); // Assuming write_color_PNG can directly accept a Color object
+            }
+        }
+
+        // Write the pixel data to a PNG file
         FILE* fp = fopen(filePath.c_str(), "wb");
         if (!fp) {
             std::cerr << "Failed to open file " << filePath << " for writing." << std::endl;
@@ -368,11 +377,13 @@ private:
         }
         svpng(fp, image_width, image_height, pixels.data(), 0);
         fclose(fp);
+
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
         std::clog << std::endl << "Done.\n";
         std::clog << "Time elapsed: " << elapsed.count() << "s" << std::endl;
     }
+
 };
 
 #endif //RAY_TRACING_CAMERA_H

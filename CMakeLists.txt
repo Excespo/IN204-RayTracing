@@ -9,20 +9,30 @@ set ( CMAKE_CXX_EXTENSIONS        OFF )
 # In case compilation cannot be done on +WINDOWS -CLION
 #set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 
+# Include directories
+include_directories(
+    ${CMAKE_SOURCE_DIR}/Math
+    ${CMAKE_SOURCE_DIR}/Geometry
+    ${CMAKE_SOURCE_DIR}/Materials
+    ${CMAKE_SOURCE_DIR}/Utilities
+    ${CMAKE_SOURCE_DIR}/Camera
+)
+
 add_executable(ray_tracing main.cpp
-        utils.h
-        vector.h
-        debug.h
-        ray.h
-        color.h
-        interval.h
-        camera.h
-        hittable.h
-        material.h
-        geometry.h
-        common.h
-        clipp.h
-        args.h
-        aabb.h
-        texture.h
+        Utilities/utils.h
+        Utilities/args.h
+        Utilities/clipp.h
+        Utilities/color.h
+        Utilities/common.h
+        Utilities/debug.h
+        Utilities/svpng.inc
+        Math/interval.h
+        Math/ray.h
+        Math/vector.h
+        Materials/material.h
+        Materials/texture.h
+        Camera/camera.h
+        Geometry/geometry.h
+        Geometry/aabb.h
+        Geometry/hittable.h
 )
