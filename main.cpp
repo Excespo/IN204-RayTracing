@@ -5,13 +5,15 @@
 #include "camera.h"
 #include "material.h"
 #include "geometry.h"
+#include "texture.h"
 
 // Only function to be modified by users
 HittableList construct() {
     HittableList world;
 
-    auto ground_material = std::make_shared<Lambertian>(Color(0.2, 0.2, 0.2));
-    world.add(std::make_shared<Sphere>(Point3d(0,-1000,0), 1000, ground_material));
+//    auto ground_material = std::make_shared<Lambertian>(Color(0.2, 0.2, 0.2));
+    auto checker = make_shared<CheckerTexture>(0.32, Color(0.2, 0.3, 0.1), Color(0.9, 0.9, 0.9));
+    world.add(std::make_shared<Sphere>(Point3d(0,-1000,0), 1000, make_shared<Lambertian>(checker)));
     std::clog <<"GO2\n";
 
     for (int a = -11; a < 11; a++) {
@@ -75,7 +77,7 @@ HittableList construct() {
 
     std::clog << "WORLD\n";
     // Use BVH to reduce complexity
-    world = HittableList(std::make_shared<BVH_Node>(world));
+    world = HittableList(make_shared<BVH_Node>(world));
 
     return world;
 }

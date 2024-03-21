@@ -5,18 +5,25 @@
 #ifndef RAY_TRACING_MATERIAL_H
 #define RAY_TRACING_MATERIAL_H
 
+#include <utility>
+
 #include "common.h"
 #include "hittable.h"
+#include "texture.h"
 
 class Material {
 public:
     virtual ~Material() = default;
     virtual bool scatter(const Ray& ray_in, const HitStatus& stat, Color& attenuation, Ray& scattered) const = 0;
+    virtual Color emitted(double u, double v, const Point3d& p) const {
+        return Color(0, 0, 0);
+    }
 };
 
 class Lambertian : public Material {
 public:
-    Lambertian(const Color& a) : albedo(a) {}
+    explicit Lambertian(const Color& albedo) : tex(make_shared<SolidColor>(albedo)) {}
+    explicit Lambertian(shared_ptr<Texture> tex) : tex(std::move(tex)) {}
 
     bool scatter(const Ray& r_in, const HitStatus& stat, Color& attenuation, Ray& scattered)
     const override {
@@ -26,24 +33,24 @@ public:
         if (scatter_direction.near_zero())
             scatter_direction = stat.normal;
 
-        scattered = Ray(stat.hit_point, scatter_direction);
-        attenuation = albedo;
+        scattered = Ray(stat.hit_point, scatter_direction, r_in.time());
+        attenuation = tex->value(stat.u, stat.v, stat.hit_point);
         return true;
     }
 
 private:
-    Color albedo;
+    shared_ptr<Texture> tex;
 };
 
 
 class Metal : public Material {
 public:
-    Metal(const Color& a, double f) : albedo(a), fuzz(f < 1 ? f : 1) {}
+    Metal(const Color& albedo, double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
 
     bool scatter(const Ray& r_in, const HitStatus& stat, Color& attenuation, Ray& scattered)
     const override {
         Vector3d reflected = reflect(unit_vector(r_in.direction()), stat.normal);
-        scattered = Ray(stat.hit_point, reflected + fuzz*random_in_unit_sphere());
+        scattered = Ray(stat.hit_point, reflected + fuzz*random_in_unit_sphere(), r_in.time());
         attenuation = albedo;
         return (dot(scattered.direction(), stat.normal) > 0);
     }
@@ -58,12 +65,12 @@ class Dielectric : public Material {
 public:
     Dielectric(double index_of_refraction) : ir(index_of_refraction) {}
 
-    bool scatter(const Ray& ray_in, const HitStatus& stat, Color& attenuation, Ray& scattered)
+    bool scatter(const Ray& r_in, const HitStatus& stat, Color& attenuation, Ray& scattered)
     const override {
         attenuation = Color(1.0, 1.0, 1.0);
         double refraction_ratio = stat.front_face ? (1.0/ir) : ir;
 
-        Vector3d unit_direction = unit_vector(ray_in.direction());
+        Vector3d unit_direction = unit_vector(r_in.direction());
         double cos_theta = fmin(dot(-unit_direction, stat.normal), 1.0);
         double sin_theta = sqrt(1.0 - cos_theta*cos_theta);
 
@@ -75,7 +82,7 @@ public:
         else
             direction = refract(unit_direction, stat.normal, refraction_ratio);
 
-        scattered = Ray(stat.hit_point, direction);
+        scattered = Ray(stat.hit_point, direction, r_in.time());
         return true;
     }
 
