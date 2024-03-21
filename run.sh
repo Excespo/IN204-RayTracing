@@ -10,10 +10,10 @@ touch ${MESSAGE_TO}
 
 n_samples=10
 max_depth=10
-image_width=16
-n_threads=1
+image_width=1280
+n_threads=8
 
-output_name="result/image"
+output_name="result/image_${image_width}_${n_samples}"
 extension="png"
 output_file="${output_name}.${extension}"
 #output_file="cout"

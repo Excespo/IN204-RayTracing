@@ -6,18 +6,30 @@ For more scenarios than the demo given by `main.cpp`, edit this `construct` func
 
 Construct a list for all objects to be rendered : `HittableList world`
 
-Define a material with : `auto material = std::make_shared<MATERIAL>(Color(R,G,B))`
+Define a texture with : `auto texture = std::make_shared<TEXTURE>(...)`
 
-Define a geometry with : `auto geo = std::make_shared<GEOMETRY>(Point3d(X,Y,Z), RADIUS, material)`
+Define a material with : `auto material = std::make_shared<MATERIAL>(texture)`
 
-Add this geometry to world : `world.add(geo)`
+Define a geometry with : `auto geometry = std::make_shared<GEOMETRY>(Point3d(X,Y,Z), RADIUS, material)`
+
+Add this geometry to world : `world.add(geometry)`
+
+**(Arguments can be slightly differed from method to method, check the header file for accurate usage.)**
 
 Then just build and run the ray tracing program!
+
+Currently supported options for TEXTURE are:
+ - CheckerTexture: Squares distributed like checker
 
 Currently supported options for MATERIAL are:
  - Lambertian : Material to simulate objects that cause diffusion reflection
  - Metal : Material to simulate metal objects
  - Dielectric : Material to simulate glass-like objects
+ - Diffuse Light : Under construction yet
+
+Currently supported options for GEOMETRY are:
+ - Sphere
+ - Box
 
 # Build and run
 ```bash
@@ -32,7 +44,7 @@ Change the variables in script for different work mode
  - -a : anti-alias mode on
 
 # Log
-`result/log.txt` : you can find the corresponding parameters and elapsed time.
+`result/log.txt` : you can find the corresponding parameters and elapsed time appended in this file after every run.
 
 # Caracteristics to be implemented
  - Texture (mapping from 2d to 3d)

@@ -74,7 +74,6 @@ HittableList construct() {
     auto material3 = std::make_shared<Metal>(Color(0.7, 0.6, 0.5), 0.0);
     world.add(std::make_shared<Sphere>(Point3d(4, 1, 0), 1.0, material3));
 
-    std::clog << "WORLD\n";
     // Use BVH to reduce complexity
     world = HittableList(make_shared<BVH_Node>(world));
 
